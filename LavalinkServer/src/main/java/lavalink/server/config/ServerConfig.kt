@@ -40,4 +40,5 @@ class ServerConfig {
     var isSoundcloudSearchEnabled = true
     var ratelimit: RateLimitConfig? = null
     var spotify: SpotifyConfig? = null
+    var youtubeConfig: YoutubeConfig? = null
 }
