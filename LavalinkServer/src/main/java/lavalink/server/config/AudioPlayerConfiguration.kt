@@ -1,5 +1,6 @@
 package lavalink.server.config
 
+import at.xirado.lavalink.spotify.Spotify
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager
@@ -45,6 +46,8 @@ class AudioPlayerConfiguration {
             audioPlayerManager.enableGcMonitoring()
         }
 
+
+
         val defaultFrameBufferDuration = audioPlayerManager.frameBufferDuration
         serverConfig.frameBufferDurationMs?.let {
             if (it < 200) { // At the time of writing, LP enforces a minimum of 200ms.
@@ -55,6 +58,14 @@ class AudioPlayerConfiguration {
             log.debug("Setting frame buffer duration to {}", bufferDuration)
             audioPlayerManager.frameBufferDuration = bufferDuration
         }
+
+        if (serverConfig.spotify != null) {
+            val spotify = Spotify(serverConfig.spotify, audioPlayerManager)
+            audioPlayerManager.registerSourceManager(spotify)
+        } else {
+            log.warn("Missing spotify configuration!")
+        }
+
 
         if (sources.isYoutube) {
             val youtube = YoutubeAudioSourceManager(serverConfig.isYoutubeSearchEnabled)
