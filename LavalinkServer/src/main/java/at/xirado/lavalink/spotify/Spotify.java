@@ -2,6 +2,7 @@ package at.xirado.lavalink.spotify;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -121,7 +122,7 @@ public class Spotify implements AudioSourceManager
 
     public SpotifyTrack getTrack(String id) throws IOException, ParseException, SpotifyWebApiException {
         var track = this.spotify.getTrack(id).build().execute();
-        return SpotifyTrack.of(track, this);
+        return SpotifyTrack.of(track, this).setIsrc(track.getExternalIds().getExternalIds().get("isrc"));
     }
 
     public SpotifyPlaylist getPlaylist(String id) throws IOException, ParseException, SpotifyWebApiException {
@@ -136,8 +137,11 @@ public class Spotify implements AudioSourceManager
         }
 
         var tracks = new ArrayList<AudioTrack>();
-        for (var item : playlistTracks) {
-            tracks.add(SpotifyTrack.of((Track) item.getTrack(), this));
+        for (var item : playlistTracks)
+        {
+            if (!(item.getTrack() instanceof Track))
+                continue;
+            tracks.add(SpotifyTrack.of((Track) item.getTrack(), this).setIsrc(((Track) item.getTrack()).getExternalIds().getExternalIds().get("isrc")));
         }
 
         return new SpotifyPlaylist(playlist.getName(), tracks, 0);
@@ -152,13 +156,15 @@ public class Spotify implements AudioSourceManager
     @Override
     public void encodeTrack(AudioTrack track, DataOutput output) throws IOException
     {
-
+        SpotifyTrack spotifyTrack = (SpotifyTrack) track;
+        DataFormatTools.writeNullableText(output, spotifyTrack.getISRC());
     }
 
     @Override
     public AudioTrack decodeTrack(AudioTrackInfo trackInfo, DataInput input) throws IOException
     {
-        return new SpotifyTrack(trackInfo, this);
+        String isrc = DataFormatTools.readNullableText(input);
+        return new SpotifyTrack(trackInfo, this).setIsrc(isrc);
     }
 
     @Override
